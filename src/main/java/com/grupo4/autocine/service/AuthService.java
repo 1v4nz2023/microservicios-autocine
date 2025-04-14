@@ -18,6 +18,9 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtService jwtService;
+
     public LoginResponseDTO login(LoginDTO loginDTO) {
         Usuario usuario = usuarioRepository.findByEmail(loginDTO.getEmail())
                 .orElseThrow(() -> new AuthenticationException("Usuario y/o contraseña incorrecta"));
@@ -26,7 +29,9 @@ public class AuthService {
             throw new AuthenticationException("Usuario y/o contraseña incorrecta");
         }
 
-        return convertToLoginResponseDTO(usuario);
+        LoginResponseDTO response = convertToLoginResponseDTO(usuario);
+        response.setToken(jwtService.generateToken(response));
+        return response;
     }
 
     private LoginResponseDTO convertToLoginResponseDTO(Usuario usuario) {

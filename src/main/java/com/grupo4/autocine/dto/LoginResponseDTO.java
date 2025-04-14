@@ -9,5 +9,5 @@ public class LoginResponseDTO {
     private String apellido;
     private String email;
     private String fotoPerfil;
-
+    private String token;
 } 
