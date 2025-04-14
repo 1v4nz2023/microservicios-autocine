@@ -27,6 +27,8 @@ public class Usuario {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "foto_perfil")
+    private String fotoPerfil;
 
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
