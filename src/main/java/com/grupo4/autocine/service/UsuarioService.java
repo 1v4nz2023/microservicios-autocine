@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -79,6 +80,14 @@ public class UsuarioService {
 
     public void delete(Long id) {
         usuarioRepository.deleteById(id);
+    }
+
+    public void updateProfilePhoto(Long userId, String photoUrl) {
+        Usuario usuario = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        usuario.setFotoPerfil(photoUrl);
+        usuarioRepository.save(usuario);
     }
 
     private LoginResponseDTO convertToLoginResponseDTO(Usuario usuario) {

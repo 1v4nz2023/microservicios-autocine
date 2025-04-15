@@ -24,10 +24,10 @@ public class JwtService {
 
     public String generateToken(LoginResponseDTO user) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("id", user.getId());
         claims.put("nombre", user.getNombre());
         claims.put("apellido", user.getApellido());
         claims.put("email", user.getEmail());
-        claims.put("fotoPerfil", user.getFotoPerfil());
         
         return Jwts.builder()
                 .setClaims(claims)

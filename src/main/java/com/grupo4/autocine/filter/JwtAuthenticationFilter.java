@@ -75,4 +75,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         ErrorResponseDTO error = new ErrorResponseDTO(message, HttpStatus.UNAUTHORIZED.value());
         objectMapper.writeValue(response.getWriter(), error);
     }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.contains("/api/auth/login");
+    }
 } 
