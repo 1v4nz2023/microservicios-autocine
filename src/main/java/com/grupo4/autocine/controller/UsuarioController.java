@@ -1,9 +1,11 @@
 package com.grupo4.autocine.controller;
 
+import com.grupo4.autocine.dto.ErrorResponseDTO;
 import com.grupo4.autocine.dto.LoginResponseDTO;
 import com.grupo4.autocine.dto.UsuarioDTO;
 import com.grupo4.autocine.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,8 +33,14 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<LoginResponseDTO> create(@RequestBody UsuarioDTO usuarioDTO) {
-        return ResponseEntity.ok(usuarioService.create(usuarioDTO));
+    public ResponseEntity<?> create(@RequestBody UsuarioDTO usuarioDTO) {
+        try {
+            LoginResponseDTO response = usuarioService.create(usuarioDTO);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            ErrorResponseDTO error = new ErrorResponseDTO(e.getMessage(), HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.badRequest().body(error);
+        }
     }
 
     @PutMapping("/{id}")

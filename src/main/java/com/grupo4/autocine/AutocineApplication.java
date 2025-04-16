@@ -3,7 +3,6 @@ package com.grupo4.autocine;
 import com.grupo4.autocine.config.DotenvConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContextInitializer;
 
 @SpringBootApplication
 public class AutocineApplication {

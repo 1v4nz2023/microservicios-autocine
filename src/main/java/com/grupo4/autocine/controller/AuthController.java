@@ -96,10 +96,13 @@ public class AuthController {
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordDTO forgotPasswordDTO) {
         try {
             authService.sendPasswordResetEmail(forgotPasswordDTO.getEmail());
-            return ResponseEntity.ok(Map.of("message", "If an account exists with this email, you will receive password reset instructions."));
+            return ResponseEntity.ok(Map.of("message", "Password reset instructions have been sent to your email."));
+        } catch (RuntimeException e) {
+            ErrorResponseDTO error = new ErrorResponseDTO(e.getMessage(), HttpStatus.NOT_FOUND.value());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
         } catch (Exception e) {
-            // We return the same message even if the email doesn't exist for security reasons
-            return ResponseEntity.ok(Map.of("message", "If an account exists with this email, you will receive password reset instructions."));
+            ErrorResponseDTO error = new ErrorResponseDTO("An error occurred while processing your request", HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
 

@@ -36,7 +36,7 @@ public class UsuarioService {
 
     public LoginResponseDTO create(UsuarioDTO usuarioDTO) {
         if (usuarioRepository.existsByEmail(usuarioDTO.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new RuntimeException("El correo electrónico ya está en uso");
         }
 
         Usuario usuario = new Usuario();

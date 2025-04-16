@@ -59,7 +59,7 @@ public class AuthService {
     @Transactional
     public void sendPasswordResetEmail(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new AuthenticationException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Email no encontrado en la base de datos"));
 
         // Generate a reset token
         String token = UUID.randomUUID().toString();
@@ -81,15 +81,15 @@ public class AuthService {
     @Transactional
     public void resetPassword(String token, String newPassword) {
         PasswordResetToken resetToken = tokenRepository.findByToken(token)
-                .orElseThrow(() -> new AuthenticationException("Invalid or expired reset token"));
+                .orElseThrow(() -> new AuthenticationException("Token de recuperación inválido o expirado"));
 
         // Validate token
         if (resetToken.isUsed()) {
-            throw new AuthenticationException("Reset token has already been used");
+            throw new AuthenticationException("El token ya ha sido utilizado");
         }
 
         if (resetToken.getExpirationTime().isBefore(LocalDateTime.now())) {
-            throw new AuthenticationException("Reset token has expired");
+            throw new AuthenticationException("El token de recuperación ha expirado");
         }
 
         // Update password
