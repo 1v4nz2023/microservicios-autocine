@@ -30,6 +30,10 @@ public class Usuario {
     @Column(name = "foto_perfil")
     private String fotoPerfil;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Rol rol = Rol.USER; // Default role
+
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
@@ -45,5 +49,11 @@ public class Usuario {
     @PreUpdate
     protected void onUpdate() {
         fechaActualizacion = LocalDateTime.now();
+    }
+
+    public enum Rol {
+        ADMIN,
+        USER,
+        EMPLOYEE
     }
 } 

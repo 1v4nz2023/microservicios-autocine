@@ -2,6 +2,11 @@ package com.grupo4.autocine.controller;
 
 import com.grupo4.autocine.service.CloudinaryService;
 import com.grupo4.autocine.service.UsuarioService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +17,8 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/images")
+@Tag(name = "Images", description = "Image management APIs")
+@SecurityRequirement(name = "bearerAuth")
 public class ImageController {
 
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -24,6 +31,11 @@ public class ImageController {
     private UsuarioService usuarioService;
 
     @PostMapping("/upload")
+    @Operation(summary = "Upload image", description = "Uploads an image to Cloudinary")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Image uploaded successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid file or upload failed")
+    })
     public ResponseEntity<?> uploadImage(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "folder", defaultValue = "general") String folder) {
@@ -41,6 +53,12 @@ public class ImageController {
     }
 
     @PostMapping("/profile/{userId}")
+    @Operation(summary = "Upload profile photo", description = "Uploads a profile photo for a user")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Profile photo uploaded successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid file or upload failed"),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
     public ResponseEntity<?> uploadProfilePhoto(
             @PathVariable Long userId,
             @RequestParam("file") MultipartFile file) {
@@ -48,7 +66,6 @@ public class ImageController {
             validateFile(file);
             String imageUrl = cloudinaryService.uploadProfilePhoto(file, userId);
             
-            // Update user's profile photo in database
             usuarioService.updateProfilePhoto(userId, imageUrl);
             
             Map<String, Object> response = new HashMap<>();
@@ -63,6 +80,11 @@ public class ImageController {
     }
 
     @DeleteMapping("/delete")
+    @Operation(summary = "Delete image", description = "Deletes an image from Cloudinary")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Image deleted successfully"),
+        @ApiResponse(responseCode = "400", description = "Deletion failed")
+    })
     public ResponseEntity<?> deleteImage(@RequestParam String publicId) {
         try {
             cloudinaryService.deleteImage(publicId);

@@ -35,12 +35,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String userEmail;
 
-        // Skip filter for login endpoint
-        if (request.getServletPath().contains("/api/auth/login")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             sendErrorResponse(response, "No token provided");
             return;
@@ -79,6 +73,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.contains("/api/auth/login");
+        return path.contains("/api/auth/login") || 
+               path.contains("/api/auth/forgot-password") ||
+               path.contains("/api/auth/reset-password") ||
+               (path.equals("/api/usuarios") && request.getMethod().equals("POST")) ||
+               path.startsWith("/v3/api-docs") || 
+               path.startsWith("/swagger-ui");
     }
 } 
