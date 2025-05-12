@@ -83,4 +83,18 @@ public class CloudinaryService {
         // For now, we'll return null as we'll get the URL from the user service
         return null;
     }
+
+    public String uploadMovieImage(MultipartFile file, Long peliculaId) throws IOException {
+        // Get folder path for the movie
+        String folder = "autocine/peliculas/" + peliculaId;
+        
+        // Upload image
+        Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(),
+                ObjectUtils.asMap(
+                        "folder", folder,
+                        "public_id", "movie_" + peliculaId,
+                        "resource_type", "image"
+                ));
+        return (String) uploadResult.get("secure_url");
+    }
 } 

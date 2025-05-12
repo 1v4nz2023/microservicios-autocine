@@ -4,6 +4,7 @@ import com.grupo4.autocine.filter.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -31,12 +32,22 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
+                // Rutas públicas
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/auth/forgot-password").permitAll()
                 .requestMatchers("/api/auth/reset-password").permitAll()
                 .requestMatchers("/api/usuarios").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/peliculas").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/peliculas/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                
+                // Rutas autenticadas
+                .requestMatchers("/api/auth/me").authenticated()
+                .requestMatchers("/api/auth/check-admin").authenticated()
                 .requestMatchers("/api/images/**").authenticated()
+                
+                // Rutas específicas para administradores
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

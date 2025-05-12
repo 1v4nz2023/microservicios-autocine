@@ -10,4 +10,5 @@ public class LoginResponseDTO {
     private String email;
     private String fotoPerfil;
     private String token;
+    private String rol;
 } 

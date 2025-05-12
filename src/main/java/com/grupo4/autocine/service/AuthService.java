@@ -53,6 +53,7 @@ public class AuthService {
         dto.setApellido(usuario.getApellido());
         dto.setEmail(usuario.getEmail());
         dto.setFotoPerfil(usuario.getFotoPerfil());
+        dto.setRol(usuario.getRol().toString());
         return dto;
     }
 

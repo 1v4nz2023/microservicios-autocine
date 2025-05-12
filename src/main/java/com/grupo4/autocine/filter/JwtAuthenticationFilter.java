@@ -11,12 +11,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -48,10 +51,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             userEmail = jwtService.extractClaim(jwt, claims -> claims.get("email", String.class));
+            String userRole = jwtService.extractClaim(jwt, claims -> claims.get("rol", String.class));
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // Crear autoridades basadas en el rol
+                List<SimpleGrantedAuthority> authorities = Collections.emptyList();
+                if (userRole != null && !userRole.isEmpty()) {
+                    authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + userRole));
+                }
+                
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                    userEmail, null, null);
+                    userEmail, null, authorities);
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
@@ -73,10 +83,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
+        String method = request.getMethod();
+        
+        // Permitir rutas públicas sin autenticación
         return path.contains("/api/auth/login") || 
                path.contains("/api/auth/forgot-password") ||
                path.contains("/api/auth/reset-password") ||
-               (path.equals("/api/usuarios") && request.getMethod().equals("POST")) ||
+               (path.equals("/api/usuarios") && method.equals("POST")) ||
+               (path.startsWith("/api/peliculas") && method.equals("GET")) ||
                path.startsWith("/v3/api-docs") || 
                path.startsWith("/swagger-ui");
     }

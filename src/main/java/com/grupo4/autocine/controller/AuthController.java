@@ -6,6 +6,7 @@ import com.grupo4.autocine.dto.LoginDTO;
 import com.grupo4.autocine.dto.LoginResponseDTO;
 import com.grupo4.autocine.dto.ResetPasswordDTO;
 import com.grupo4.autocine.exception.AuthenticationException;
+import com.grupo4.autocine.model.Usuario;
 import com.grupo4.autocine.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -19,8 +20,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -58,6 +62,50 @@ public class AuthController {
         } catch (AuthenticationException e) {
             ErrorResponseDTO error = new ErrorResponseDTO(e.getMessage(), HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get current user", description = "Returns information about the currently authenticated user")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User information retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "User not authenticated")
+    })
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponseDTO("User not authenticated", HttpStatus.UNAUTHORIZED.value()));
+        }
+
+        Map<String, Object> userInfo = new HashMap<>();
+        userInfo.put("email", authentication.getName());
+        userInfo.put("isAdmin", authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")));
+
+        return ResponseEntity.ok(userInfo);
+    }
+
+    @GetMapping("/check-admin")
+    @Operation(summary = "Check if user is admin", description = "Verifies if the currently authenticated user has admin privileges")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Admin status checked successfully"),
+        @ApiResponse(responseCode = "401", description = "User not authenticated"),
+        @ApiResponse(responseCode = "403", description = "User is not an admin")
+    })
+    public ResponseEntity<?> checkAdminStatus(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponseDTO("User not authenticated", HttpStatus.UNAUTHORIZED.value()));
+        }
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            return ResponseEntity.ok(Map.of("isAdmin", true, "message", "User has admin privileges"));
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponseDTO("User does not have admin privileges", HttpStatus.FORBIDDEN.value()));
         }
     }
 

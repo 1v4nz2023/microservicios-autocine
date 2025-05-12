@@ -1,7 +1,9 @@
 package com.grupo4.autocine.controller;
 
+import com.grupo4.autocine.dto.PeliculaDTO;
 import com.grupo4.autocine.service.CloudinaryService;
 import com.grupo4.autocine.service.UsuarioService;
+import com.grupo4.autocine.service.PeliculaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -29,6 +31,9 @@ public class ImageController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private PeliculaService peliculaService;
 
     @PostMapping("/upload")
     @Operation(summary = "Upload image", description = "Uploads an image to Cloudinary")
@@ -91,6 +96,85 @@ public class ImageController {
             Map<String, String> response = new HashMap<>();
             response.put("status", "success");
             response.put("message", "Imagen eliminada exitosamente");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(createErrorResponse(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/peliculas/{peliculaId}")
+    @Operation(summary = "Upload movie image", description = "Uploads an image for a movie")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Movie image uploaded successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid file or upload failed"),
+        @ApiResponse(responseCode = "404", description = "Movie not found")
+    })
+    public ResponseEntity<?> uploadMovieImage(
+            @PathVariable Long peliculaId,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            validateFile(file);
+            String imageUrl = cloudinaryService.uploadMovieImage(file, peliculaId);
+            
+            peliculaService.updateImage(peliculaId, imageUrl);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Imagen de película subida exitosamente");
+            response.put("imageUrl", imageUrl);
+            response.put("pelicula", peliculaService.findById(peliculaId));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(createErrorResponse(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/peliculas/nueva")
+    @Operation(summary = "Subir imagen y crear película", description = "Sube una imagen y crea una nueva película. Flujo simplificado para frontends.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Película creada con imagen exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Archivo inválido o datos inválidos")
+    })
+    public ResponseEntity<?> uploadImageAndCreatePelicula(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("nombre") String nombre,
+            @RequestParam("duracion") int duracion,
+            @RequestParam("clasificacion") String clasificacion,
+            @RequestParam("idioma") String idioma,
+            @RequestParam("genero") String genero,
+            @RequestParam("formato") String formato,
+            @RequestParam(value = "sinopsis", required = false) String sinopsis) {
+        try {
+            validateFile(file);
+            
+            // Upload image first
+            String imageUrl = cloudinaryService.uploadImage(file, "autocine/peliculas/nueva");
+            
+            // Create movie DTO
+            PeliculaDTO peliculaDTO = new PeliculaDTO();
+            peliculaDTO.setNombre(nombre);
+            peliculaDTO.setDuracion(duracion);
+            peliculaDTO.setClasificacion(clasificacion);
+            peliculaDTO.setIdioma(idioma);
+            peliculaDTO.setGenero(genero);
+            peliculaDTO.setFormato(formato);
+            peliculaDTO.setSinopsis(sinopsis);
+            peliculaDTO.setImageUrl(imageUrl);
+            
+            // Create movie
+            PeliculaDTO createdPelicula = peliculaService.create(peliculaDTO);
+            
+            // If movie is created successfully, move the image to the correct folder
+            if (createdPelicula.getId() != null) {
+                String finalImageUrl = cloudinaryService.uploadMovieImage(file, createdPelicula.getId());
+                peliculaService.updateImage(createdPelicula.getId(), finalImageUrl);
+                createdPelicula.setImageUrl(finalImageUrl);
+            }
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Película creada con imagen exitosamente");
+            response.put("pelicula", createdPelicula);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(createErrorResponse(e.getMessage()));
